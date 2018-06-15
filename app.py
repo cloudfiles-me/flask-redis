@@ -1,13 +1,17 @@
-import redis
 from flask import Flask
+from rediscluster import StrictRedisCluster
 
 app = Flask(__name__)
-db = redis.Redis(host='server', port=6379, db=0)
+startup_nodes = [{"host": "cluster.clustercfg.use1.cache.amazonaws.com", "port": "6379"}]
+db = StrictRedisCluster(startup_nodes=startup_nodes, decode_responses=True, skip_full_coverage_check=True)
 
 @app.route('/')
 def hello_world():
-    name = db.get('Name').decode('utf-8')
-    return 'Hello my dear %s' % name
+    name = db.get("Name")
+    if (name != None):
+        return 'Hello my dear %s' %name
+    else:
+        return 'Key not ready'
 
 @app.route('/setname/<name>')
 def setname(name):
